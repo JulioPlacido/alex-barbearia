@@ -228,8 +228,8 @@ def agendar():
   conn.close()
 
   telefones = {
-      "Alex": "5535920021388",
-      "Guilherme": "5535984519768",
+      "Alex": "5535988596966",
+      "Guilherme": "5535991191688",
       "João": "5535999999999",
   }
   tel = telefones.get(barbeiro, "5535920021388")
