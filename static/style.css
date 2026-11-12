@@ -1,0 +1,179 @@
+body {
+    background-color: #0b0b0b;
+    color: #ffffff;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    background: #141414;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.8);
+    border: 1px solid #222;
+}
+
+/* Botão Acesso Barbeiros em Vermelho */
+.btn-acesso-barbeiros {
+    background: #c0392b;
+    color: #ffffff;
+    padding: 8px 14px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: bold;
+    border: 1px solid #e74c3c;
+    transition: 0.2s;
+}
+
+.btn-acesso-barbeiros:hover {
+    background: #962d22;
+}
+
+/* Banner Superior com Logo */
+.banner-barbearia {
+    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), #1a1a1a;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 20px;
+    border: 2px solid #f1c40f;
+}
+
+.img-logo-topo {
+    max-width: 220px;
+    height: auto;
+    display: block;
+    margin: 0 auto 8px auto;
+}
+
+.banner-barbearia p {
+    color: #bbb;
+    margin: 0;
+    font-size: 13px;
+    letter-spacing: 1px;
+}
+
+/* Imagem Grande da Loja (Dobro da Altura) */
+.banner-loja-container {
+    width: 100%;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid #f1c40f;
+}
+
+.img-loja-grande {
+    width: 100%;
+    height: 360px;
+    object-fit: cover;
+    display: block;
+}
+
+.section-box {
+    background: #1a1a1a;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #2a2a2a;
+}
+
+.section-box h2 {
+    color: #f1c40f;
+    font-size: 17px;
+    margin-top: 0;
+    border-bottom: 1px solid #2a2a2a;
+    padding-bottom: 8px;
+}
+
+.card-radio {
+    display: flex;
+    align-items: center;
+    background: #222;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    border: 1px solid #333;
+    transition: 0.2s;
+}
+
+.card-radio:hover {
+    border-color: #f1c40f;
+    background: #252525;
+}
+
+.card-radio input {
+    margin-right: 12px;
+    accent-color: #f1c40f;
+}
+
+.img-corte, .img-perfil {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 15px;
+    border: 2px solid #f1c40f;
+}
+
+.card-servico .info, .card-barbeiro .info {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    align-items: center;
+}
+
+.price {
+    color: #2ecc71;
+    font-weight: bold;
+}
+
+.input-group {
+    margin-bottom: 12px;
+}
+
+.input-group label {
+    display: block;
+    font-size: 13px;
+    color: #aaa;
+    margin-bottom: 5px;
+}
+
+.input-group input, .input-group select {
+    width: 100%;
+    padding: 11px;
+    background: #101010;
+    border: 1px solid #333;
+    color: #fff;
+    border-radius: 6px;
+    box-sizing: border-box;
+}
+
+.input-group input:focus, .input-group select:focus {
+    border-color: #f1c40f;
+    outline: none;
+}
+
+/* Botão de Agendamento em Verde WhatsApp */
+.btn-agendar-whatsapp {
+    width: 100%;
+    background: #25d366;
+    color: #ffffff;
+    border: none;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: center;
+    display: block;
+    transition: 0.2s;
+}
+
+.btn-agendar-whatsapp:hover {
+    background: #1ebe57;
+}
