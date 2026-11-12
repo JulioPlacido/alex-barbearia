@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Agendamento Realizado - Alex Barbearia</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container" style="text-align: center; max-width: 500px; margin-top: 40px;">
+        <h1 style="color: #2ecc71;">Agendamento Confirmado!</h1>
+        <p style="color: #ccc;">Obrigado, <strong>{{ cliente }}</strong>. O seu horário foi reservado com sucesso.</p>
+
+        <div class="section-box" style="text-align: left; margin: 20px 0;">
+            <p style="margin: 8px 0;">✂️ <strong>Serviço:</strong> {{ servico }}</p>
+            <p style="margin: 8px 0;">👨‍🦰 <strong>Barbeiro:</strong> {{ barbeiro }}</p>
+            <p style="margin: 8px 0;">📅 <strong>Data e Hora:</strong> {{ data }} às {{ horario }}</p>
+            <p style="margin: 8px 0; color: #2ecc71;">💰 <strong>Valor:</strong> R$ {{ "%.2f"|format(valor) }}</p>
+            <hr style="border: 0; border-top: 1px solid #333; margin: 10px 0;">
+            <p style="margin: 8px 0; color: #f39c12; font-size: 13px;">⭐ <strong>Cartão Fidelidade:</strong> Este é o seu <strong>{{ cortes_totais }}º corte</strong> connosco!</p>
+        </div>
+
+        <p style="font-size: 14px; color: #aaa; margin-bottom: 20px;">Clique abaixo para enviar a confirmação e ativar o seu lembrete no WhatsApp do barbeiro:</p>
+
+        <a href="{{ whatsapp_url }}" target="_blank" class="btn-agendar" style="display: block; text-decoration: none; background: #25d366; margin-bottom: 15px;">
+            Enviar Confirmação e Lembrete no WhatsApp
+        </a>
+
+        <a href="/" style="color: #f39c12; text-decoration: none; font-size: 14px;">Voltar ao Início</a>
+    </div>
+</body>
+</html>

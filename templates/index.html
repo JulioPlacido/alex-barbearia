@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Alex Barbearia - Agendamento Online</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script>
+        const horariosOcupados = {{ ocupados | tojson }};
+        const horariosBloqueados = {{ bloqueados | tojson }};
+
+        function atualizarHorarios() {
+            const barbeiroSel = document.querySelector('input[name="barbeiro"]:checked');
+            const dataSel = document.getElementById('data-input').value;
+            const selectHorario = document.getElementById('horario-select');
+
+            for (let option of selectHorario.options) {
+                if (option.value === "") continue;
+                option.disabled = false;
+                option.text = option.value;
+                option.style.color = "#fff";
+                option.style.textDecoration = "none";
+
+                if (barbeiroSel && dataSel) {
+                    const barbeiroNome = barbeiroSel.value;
+                    const ocupado = horariosOcupados.some(item => item[0] === barbeiroNome && item[1] === dataSel && item[2] === option.value);
+                    const bloqueio = horariosBloqueados.find(item => item[0] === barbeiroNome && item[1] === dataSel && item[2] === option.value);
+
+                    if (ocupado) {
+                        option.disabled = true;
+                        option.text = option.value + " (Ocupado)";
+                        option.style.color = "#e74c3c";
+                        option.style.textDecoration = "line-through";
+                    } else if (bloqueio) {
+                        option.disabled = true;
+                        option.text = option.value + " (" + bloqueio[3] + ")";
+                        option.style.color = "#f39c12";
+                        option.style.textDecoration = "line-through";
+                    }
+                }
+            }
+        }
+
+        function validarFormulario(event) {
+            const nomeInput = document.getElementById('cliente-nome').value.trim();
+            if (nomeInput.length <= 9) {
+                alert("Por favor, digite seu Nome e Sobrenome completo (mais de 9 caracteres) para garantir a fidelidade!");
+                event.preventDefault();
+                return false;
+            }
+            return true;
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div style="text-align: right; margin-bottom: 15px;">
+            <a href="/login" class="btn-acesso-barbeiros">Acesso Barbeiros</a>
+        </div>
+
+        <div class="banner-barbearia">
+            <div class="overlay">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Alex Barbearia" class="img-logo-topo">
+                <p>Estilo, tradição e atendimento de alta qualidade</p>
+            </div>
+        </div>
+
+        <div class="banner-loja-container">
+            <img src="{{ url_for('static', filename='img/loja.png') }}" alt="Alex Barbearia - Loja" class="img-loja-grande">
+        </div>
+
+        <!-- VITRINE DE PRODUTOS SEM IMAGEM -->
+        {% if produtos %}
+        <div class="section-box">
+            <h2>Nossos Produtos</h2>
+            <div style="display: grid; gap: 10px;">
+                {% for p in produtos %}
+                <div style="background: #1e1e1e; padding: 12px; border-radius: 6px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong style="color: #fff; font-size: 15px;">{{ p[1] }}</strong>
+                        <p style="margin: 3px 0; font-size: 13px; color: #aaa;">{{ p[2] if p[2] else 'Sem descrição' }}</p>
+                        <span style="font-size: 12px; color: {{ '#2ecc71' if p[4] > 0 else '#e74c3c' }}; font-weight: bold;">
+                            {{ 'Em estoque (' ~ p[4] ~ ' un.)' if p[4] > 0 else 'Esgotado' }}
+                        </span>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="color: #2ecc71; font-weight: bold; font-size: 16px;">R$ {{ "%.2f"|format(p[3]) }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <form action="/agendar" method="POST" onsubmit="return validarFormulario(event)">
+            <div class="section-box">
+                <h2>1. Escolha o Serviço</h2>
+                {% for s in servicos %}
+                <label class="card-radio card-servico">
+                    <input type="radio" name="servico" value="{{ s.nome }}|{{ s.preco }}" required>
+                    <img src="{{ url_for('static', filename='img/' + s.imagem) }}" alt="{{ s.nome }}" class="img-corte">
+                    <span class="info">
+                        <strong>{{ s.nome }}</strong>
+                        <span class="price">R$ {{ "%.2f"|format(s.preco) }}</span>
+                    </span>
+                </label>
+                {% endfor %}
+            </div>
+
+            <!-- OPÇÃO DE ADICIONAR PRODUTO NO AGENDAMENTO -->
+            {% if produtos %}
+            <div class="section-box">
+                <h2>Deseja levar algum produto? (Opcional)</h2>
+                <div class="input-group">
+                    <select name="produto_id" style="width: 100%; padding: 10px; background: #101010; border: 1px solid #333; color: #fff; border-radius: 6px;">
+                        <option value="">Nenhum produto adicional</option>
+                        {% for p in produtos %}
+                            {% if p[4] > 0 %}
+                            <option value="{{ p[0] }}">{{ p[1] }} - R$ {{ "%.2f"|format(p[3]) }} (Estoque: {{ p[4] }})</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="section-box">
+                <h2>2. Escolha o Barbeiro</h2>
+                {% for b in barbeiros %}
+                <label class="card-radio card-barbeiro">
+                    <input type="radio" name="barbeiro" value="{{ b.nome }}" onchange="atualizarHorarios()" required>
+                    <img src="{{ url_for('static', filename='img/' + b.foto) }}" alt="{{ b.nome }}" class="img-perfil">
+                    <span class="info">
+                        <strong>{{ b.nome }}</strong>
+                    </span>
+                </label>
+                {% endfor %}
+            </div>
+
+            <div class="section-box">
+                <h2>3. Data e Horário</h2>
+                <div class="input-group">
+                    <label>Data:</label>
+                    <input type="date" id="data-input" name="data" min="{{ hoje }}" value="{{ hoje }}" onchange="atualizarHorarios()" required>
+                </div>
+                <div class="input-group">
+                    <label>Horário (Das 08:00 às 18:00):</label>
+                    <select id="horario-select" name="horario" required>
+                        <option value="">Selecione um horário disponível</option>
+                        <option value="08:00">08:00</option>
+                        <option value="09:00">09:00</option>
+                        <option value="10:00">10:00</option>
+                        <option value="11:00">11:00</option>
+                        <option value="12:00">12:00</option>
+                        <option value="13:00">13:00</option>
+                        <option value="14:00">14:00</option>
+                        <option value="15:00">15:00</option>
+                        <option value="16:00">16:00</option>
+                        <option value="17:00">17:00</option>
+                        <option value="18:00">18:00</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="section-box">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a2a2a; padding-bottom: 8px; margin-bottom: 12px;">
+                    <h2 style="margin: 0; border: none; padding: 0;">Nome e Sobrenome</h2>
+                    <span style="font-size: 11px; color: #f1c40f; font-weight: bold;">( Informe seu nome e sobrenome para garantir a FIDELIDADE )</span>
+                </div>
+                <div class="input-group">
+                    <input type="text" id="cliente-nome" name="cliente_nome" placeholder="Digite seu Nome e Sobrenome" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-agendar-whatsapp">Confirmar Agendamento via WhatsApp</button>
+        </form>
+    </div>
+</body>
+</html>

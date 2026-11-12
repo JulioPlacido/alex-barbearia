@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Alex Barbearia</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container" style="max-width: 400px; margin-top: 50px;">
+        <header>
+            <h1 style="color: #f39c12;">LOGIN BARBEIROS</h1>
+            <p>Acesse sua agenda</p>
+        </header>
+
+        {% if erro %}
+        <p style="color: #e74c3c; text-align: center; font-weight: bold;">{{ erro }}</p>
+        {% endif %}
+
+        <form action="/login" method="POST">
+            <div class="input-group">
+                <label>Nome do Barbeiro:</label>
+                <input type="text" name="nome" placeholder="Ex: Alex" required>
+            </div>
+            <div class="input-group">
+                <label>Senha:</label>
+                <input type="password" name="senha" placeholder="Sua senha" required>
+            </div>
+            <button type="submit" class="btn-agendar" style="margin-top: 15px;">Entrar no Sistema</button>
+        </form>
+        <div style="text-align: center; margin-top: 15px;">
+            <a href="/" style="color: #888; text-decoration: none; font-size: 13px;">Voltar para o site</a>
+        </div>
+    </div>
+</body>
+</html>
