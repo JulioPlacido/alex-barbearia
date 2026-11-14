@@ -37,6 +37,16 @@ def init_db():
             papel TEXT NOT NULL
         )
     """)
+  
+  try:
+    cursor.execute("ALTER TABLE usuarios ADD COLUMN whatsapp TEXT DEFAULT '35988596966'")
+  except:
+    pass
+  try:
+    cursor.execute("ALTER TABLE usuarios ADD COLUMN foto TEXT DEFAULT 'alex.png'")
+  except:
+    pass
+
   cursor.execute("""
         CREATE TABLE IF NOT EXISTS horarios_bloqueados (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -69,52 +79,91 @@ def init_db():
             faturamento_extra REAL DEFAULT 0.0
         )
     """)
+  
+  cursor.execute("""
+        CREATE TABLE IF NOT EXISTS servicos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT NOT NULL,
+            preco REAL NOT NULL,
+            imagem TEXT
+        )
+    """)
   conn.commit()
 
   cursor.execute("SELECT COUNT(*) FROM usuarios")
   if cursor.fetchone()[0] == 0:
     cursor.execute(
-        "INSERT INTO usuarios (nome, senha, papel) VALUES (?, ?, ?)",
-        ("Alex", "1234", "admin"),
+        "INSERT INTO usuarios (nome, senha, papel, whatsapp, foto) VALUES (?, ?, ?, ?, ?)",
+        ("Alex", "1234", "admin", "35988596966", "alex.png"),
     )
     cursor.execute(
-        "INSERT INTO usuarios (nome, senha, papel) VALUES (?, ?, ?)",
-        ("Guilherme", "1234", "barbeiro"),
-    )
-    cursor.execute(
-        "INSERT INTO usuarios (nome, senha, papel) VALUES (?, ?, ?)",
-        ("João", "1234", "barbeiro"),
+        "INSERT INTO usuarios (nome, senha, papel, whatsapp, foto) VALUES (?, ?, ?, ?, ?)",
+        ("Guilherme", "1234", "barbeiro", "35991191688", "guilherme.png"),
     )
     conn.commit()
+  else:
+    cursor.execute("UPDATE usuarios SET whatsapp = '35988596966' WHERE nome = 'Alex'")
+    cursor.execute("UPDATE usuarios SET whatsapp = '35991191688' WHERE nome = 'Guilherme'")
+    conn.commit()
+
+  cursor.execute("SELECT COUNT(*) FROM servicos")
+  if cursor.fetchone()[0] == 0:
+    servicos_iniciais = [
+        ("Corte de Cabelo", 35.0, "corte.png"),
+        ("Barba", 25.0, "barba.png"),
+        ("Alisamento", 50.0, "alisamento.png"),
+        ("Sobrancelha", 15.0, "sobrancelha.png"),
+        ("Corte e Barba", 55.0, "corte_barba.png"),
+        ("Corte e Sobrancelha", 40.0, "corte_sobrancelha.png"),
+    ]
+    cursor.executemany(
+        "INSERT INTO servicos (nome, preco, imagem) VALUES (?, ?, ?)",
+        servicos_iniciais,
+    )
+    conn.commit()
+
   conn.close()
 
 
-# ==========================================
-# CORREÇÃO CRUCIAL PARA O RENDER (ERRO 500)
-# ==========================================
 with app.app_context():
   init_db()
 
 
+def formatar_data(data_str):
+  if not data_str or len(data_str) != 10:
+    return data_str
+  try:
+    partes = data_str.split("-")
+    if len(partes) == 3:
+      return f"{partes[2]}/{partes[1]}/{partes[0]}"
+  except:
+    pass
+  return data_str
+
+
 @app.route("/")
 def index():
-  servicos = [
-      {"nome": "Corte", "preco": 35.0, "imagem": "corte.png"},
-      {"nome": "Corte e Barba", "preco": 55.0, "imagem": "corte_barba.png"},
-      {
-          "nome": "Corte e Sobrancelha",
-          "preco": 40.0,
-          "imagem": "corte_sobrancelha.png",
-      },
-  ]
-  barbeiros = [
-      {"nome": "Alex", "whatsapp": "5535920021388", "foto": "alex.png"},
-      {"nome": "Guilherme", "whatsapp": "5535984519768", "foto": "guilherme.png"},
-      {"nome": "João", "whatsapp": "5535999999999", "foto": "joao.png"},
-  ]
-
   conn = sqlite3.connect("barbearia.db")
   cursor = conn.cursor()
+  
+  cursor.execute("SELECT nome, whatsapp, foto FROM usuarios WHERE papel IN ('barbeiro', 'admin')")
+  barbeiros_db = cursor.fetchall()
+  barbeiros = [
+      {
+          "nome": b[0], 
+          "whatsapp": b[1] if b[1] else "35988596966", 
+          "foto": b[2] if b[2] and b[2].strip() else "alex.png"
+      }
+      for b in barbeiros_db
+  ]
+
+  cursor.execute("SELECT id, nome, preco, imagem FROM servicos")
+  servicos_db = cursor.fetchall()
+  servicos = [
+      {"id": s[0], "nome": s[1], "preco": s[2], "imagem": s[3]}
+      for s in servicos_db
+  ]
+
   cursor.execute("SELECT barbeiro, data, horario FROM agendamentos")
   ocupados = cursor.fetchall()
   cursor.execute("SELECT barbeiro, data, horario, motivo FROM horarios_bloqueados")
@@ -225,20 +274,28 @@ def agendar():
     cortes_totais = 1
 
   conn.commit()
+
+  cursor.execute("SELECT whatsapp FROM usuarios WHERE nome = ?", (barbeiro,))
+  u_tel = cursor.fetchone()
+  tel = u_tel[0] if u_tel and u_tel[0] else "35988596966"
   conn.close()
 
-  telefones = {
-      "Alex": "5535988596966",
-      "Guilherme": "5535991191688",
-      "João": "5535999999999",
-  }
-  tel = telefones.get(barbeiro, "5535920021388")
+  data_formatada = formatar_data(data)
+
   msg = (
-      f"Olá *{barbeiro}*, novo agendamento de *{cliente_nome}*!%0A"
-      f"✂️ *Serviço:* {servico_nome} (R$ {servico_valor:.2f})%0A"
-      f"📅 *Data:* {data} às {horario}"
+      f"💈 *NOVO AGENDAMENTO CONFIRMADO* 💈%0A"
+      f"────────────────────────%0A"
+      f"👤 *Profissional:* {barbeiro}%0A"
+      f"*Cliente:* {cliente_nome}%0A"
+      f"✂️ *Serviço:* {servico_nome}%0A"
+      f"💰 *Valor:* R$ {servico_valor:.2f}%0A"
+      f"📅 *Data:* {data_formatada}%0A"
+      f"⏰ *Horário:* {horario}%0A"
+      f"────────────────────────%0A"
+      f"✨ *Alex Barbearia* - Estilo e Tradição!"
   )
-  whatsapp_url = f"https://api.whatsapp.com/send?phone={tel}&text={msg}"
+  
+  whatsapp_url = f"https://api.whatsapp.com/send?phone=55{tel}&text={msg}"
 
   return render_template(
       "sucesso.html",
@@ -246,7 +303,7 @@ def agendar():
       barbeiro=barbeiro,
       servico=servico_nome,
       valor=servico_valor,
-      data=data,
+      data=data_formatada,
       horario=horario,
       cortes_totais=cortes_totais,
       whatsapp_url=whatsapp_url,
@@ -299,17 +356,27 @@ def painel():
       " agendamentos WHERE barbeiro = ? ORDER BY data DESC, horario DESC",
       (user,),
   )
-  agendamentos = cursor.fetchall()
+  agendamentos_raw = cursor.fetchall()
+  agendamentos = [
+      (a[0], a[1], a[2], a[3], a[4], formatar_data(a[5]), a[6])
+      for a in agendamentos_raw
+  ]
 
   cursor.execute(
       "SELECT id, data, horario, motivo FROM horarios_bloqueados WHERE barbeiro"
       " = ? ORDER BY data, horario",
       (user,),
   )
-  meus_bloqueios = cursor.fetchall()
+  bloqueios_raw = cursor.fetchall()
+  meus_bloqueios = [
+      (b[0], formatar_data(b[1]), b[2], b[3])
+      for b in bloqueios_raw
+  ]
 
   stats_barbeiros = []
   usuarios_lista = []
+  servicos_lista = []
+  
   if papel == "admin":
     cursor.execute(
         "SELECT nome FROM usuarios WHERE papel IN ('barbeiro', 'admin')"
@@ -337,8 +404,8 @@ def painel():
       qtd = max(0, qtd_real + atend_extra)
       total = max(0.0, total_real + fat_extra)
 
-      comissao_casa = total * 0.30
-      comissao_barbeiro = total * 0.70
+      comissao_casa = total * 0.40
+      comissao_barbeiro = total * 0.60
       stats_barbeiros.append({
           "nome": b,
           "qtd": qtd,
@@ -347,8 +414,11 @@ def painel():
           "barbeiro": comissao_barbeiro,
       })
 
-    cursor.execute("SELECT id, nome, senha, papel FROM usuarios")
+    cursor.execute("SELECT id, nome, senha, papel, whatsapp FROM usuarios")
     usuarios_lista = cursor.fetchall()
+
+  cursor.execute("SELECT id, nome, preco FROM servicos")
+  servicos_lista = cursor.fetchall()
 
   filtro_fat = request.args.get("filtro", "mes")
   hoje_str = datetime.now().strftime("%Y-%m-%d")
@@ -386,7 +456,7 @@ def painel():
       incluir = True
 
     if incluir:
-      fat_filtrado.append(row)
+      fat_filtrado.append((row[0], row[1], row[2], row[3], row[4], formatar_data(row[5]), row[6]))
       total_fat += valor_item
 
   cursor.execute("SELECT id, nome, descricao, preco, quantidade FROM produtos")
@@ -409,12 +479,32 @@ def painel():
       fat_filtrado=fat_filtrado,
       total_fat=total_fat,
       filtro_fat=filtro_fat,
-      hoje=hoje_str,
+      hoje=formatar_data(hoje_str),
       stats_barbeiros=stats_barbeiros,
       produtos=produtos,
       fidelidade_clientes=fidelidade_clientes,
       usuarios_lista=usuarios_lista,
+      servicos_lista=servicos_lista,
   )
+
+
+@app.route("/atualizar_servico/<int:id>", methods=["POST"])
+def atualizar_servico(id):
+  if "user_nome" not in session or session.get("user_papel") != "admin":
+    return redirect(url_for("login"))
+
+  novo_nome = request.form["nome"]
+  novo_preco = float(request.form["preco"])
+
+  conn = sqlite3.connect("barbearia.db")
+  cursor = conn.cursor()
+  cursor.execute(
+      "UPDATE servicos SET nome = ?, preco = ? WHERE id = ?",
+      (novo_nome, novo_preco, id),
+  )
+  conn.commit()
+  conn.close()
+  return redirect(url_for("painel"))
 
 
 @app.route("/bloquear_horario", methods=["POST"])
@@ -423,7 +513,7 @@ def bloquear_horario():
     return redirect(url_for("login"))
 
   barbeiro = session["user_nome"]
-  data = request.form["data_bloqueio"]
+  data_form = request.form["data_bloqueio"]
   horario = request.form["horario_bloqueio"]
   motivo = request.form["motivo"]
 
@@ -433,7 +523,7 @@ def bloquear_horario():
     cursor.execute(
         "INSERT INTO horarios_bloqueados (barbeiro, data, horario, motivo)"
         " VALUES (?, ?, ?, ?)",
-        (barbeiro, data, horario, motivo),
+        (barbeiro, data_form, horario, motivo),
     )
     conn.commit()
   except:
@@ -541,6 +631,33 @@ def zerar_fidelidade(id):
   return redirect(url_for("painel"))
 
 
+@app.route("/remover_fidelidade/<int:id>")
+def remover_fidelidade(id):
+  if "user_nome" not in session:
+    return redirect(url_for("login"))
+
+  conn = sqlite3.connect("barbearia.db")
+  cursor = conn.cursor()
+  cursor.execute("DELETE FROM fidelidade WHERE id = ?", (id,))
+  conn.commit()
+  conn.close()
+  return redirect(url_for("painel"))
+
+
+@app.route("/zerar_tudo_faturamento")
+def zerar_tudo_faturamento():
+  if "user_nome" not in session or session.get("user_papel") != "admin":
+    return redirect(url_for("login"))
+
+  conn = sqlite3.connect("barbearia.db")
+  cursor = conn.cursor()
+  cursor.execute("DELETE FROM agendamentos")
+  cursor.execute("DELETE FROM ajustes_desempenho")
+  conn.commit()
+  conn.close()
+  return redirect(url_for("painel"))
+
+
 @app.route("/atualizar_usuario/<int:id>", methods=["POST"])
 def atualizar_usuario(id):
   if "user_nome" not in session or session.get("user_papel") != "admin":
@@ -548,12 +665,14 @@ def atualizar_usuario(id):
 
   novo_nome = request.form["nome"]
   nova_senha = request.form["senha"]
+  novo_whatsapp = request.form["whatsapp"]
+  foto_nome = novo_nome.lower().replace(" ", "_") + ".png"
 
   conn = sqlite3.connect("barbearia.db")
   cursor = conn.cursor()
   cursor.execute(
-      "UPDATE usuarios SET nome = ?, senha = ? WHERE id = ?",
-      (novo_nome, nova_senha, id),
+      "UPDATE usuarios SET nome = ?, senha = ?, whatsapp = ?, foto = ? WHERE id = ?",
+      (novo_nome, nova_senha, novo_whatsapp, foto_nome, id),
   )
   conn.commit()
   conn.close()
@@ -568,17 +687,37 @@ def criar_usuario():
   nome = request.form["nome"]
   senha = request.form["senha"]
   papel = request.form["papel"]
+  whatsapp = request.form["whatsapp"]
+  foto_nome = nome.lower().replace(" ", "_") + ".png"
 
   conn = sqlite3.connect("barbearia.db")
   cursor = conn.cursor()
   try:
     cursor.execute(
-        "INSERT INTO usuarios (nome, senha, papel) VALUES (?, ?, ?)",
-        (nome, senha, papel),
+        "INSERT INTO usuarios (nome, senha, papel, whatsapp, foto) VALUES (?, ?, ?, ?, ?)",
+        (nome, senha, papel, whatsapp, foto_nome),
     )
     conn.commit()
   except:
     pass
+  conn.close()
+  return redirect(url_for("painel"))
+
+
+@app.route("/remover_usuario/<int:id>")
+def remover_usuario(id):
+  if "user_nome" not in session or session.get("user_papel") != "admin":
+    return redirect(url_for("login"))
+
+  conn = sqlite3.connect("barbearia.db")
+  cursor = conn.cursor()
+  cursor.execute("SELECT nome FROM usuarios WHERE id = ?", (id,))
+  user_alvo = cursor.fetchone()
+  
+  if user_alvo and user_alvo[0] != "Alex":
+    cursor.execute("DELETE FROM usuarios WHERE id = ?", (id,))
+    conn.commit()
+    
   conn.close()
   return redirect(url_for("painel"))
 
