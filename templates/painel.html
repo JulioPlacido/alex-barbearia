@@ -10,7 +10,14 @@
             document.getElementById('aba-faturamento').style.display = (aba === 'faturamento') ? 'block' : 'none';
             document.getElementById('aba-estoque').style.display = (aba === 'estoque') ? 'block' : 'none';
             document.getElementById('aba-fidelidade').style.display = (aba === 'fidelidade') ? 'block' : 'none';
+            
+            const abaDesempenho = document.getElementById('aba-desempenho');
+            if (abaDesempenho) abaDesempenho.style.display = (aba === 'desempenho') ? 'block' : 'none';
+
             {% if papel == 'admin' %}
+            const abaServicos = document.getElementById('aba-servicos');
+            if (abaServicos) abaServicos.style.display = (aba === 'servicos') ? 'block' : 'none';
+
             const abaAcessos = document.getElementById('aba-acessos');
             if (abaAcessos) abaAcessos.style.display = (aba === 'acessos') ? 'block' : 'none';
             {% endif %}
@@ -27,7 +34,19 @@
             document.getElementById('btn-aba-fidelidade').style.background = (aba === 'fidelidade') ? '#f1c40f' : '#222';
             document.getElementById('btn-aba-fidelidade').style.color = (aba === 'fidelidade') ? '#0b0b0b' : '#fff';
 
+            const btnDesempenho = document.getElementById('btn-aba-desempenho');
+            if (btnDesempenho) {
+                btnDesempenho.style.background = (aba === 'desempenho') ? '#f1c40f' : '#222';
+                btnDesempenho.style.color = (aba === 'desempenho') ? '#0b0b0b' : '#fff';
+            }
+
             {% if papel == 'admin' %}
+            const btnServicos = document.getElementById('btn-aba-servicos');
+            if (btnServicos) {
+                btnServicos.style.background = (aba === 'servicos') ? '#f1c40f' : '#222';
+                btnServicos.style.color = (aba === 'servicos') ? '#0b0b0b' : '#fff';
+            }
+
             const btnAcessos = document.getElementById('btn-aba-acessos');
             if (btnAcessos) {
                 btnAcessos.style.background = (aba === 'acessos') ? '#f1c40f' : '#222';
@@ -58,59 +77,21 @@
             <button id="btn-aba-estoque" onclick="mudarAba('estoque')" style="background: #222; color: #fff; border: none; padding: 10px 16px; font-weight: bold; border-radius: 6px; cursor: pointer;">Estoque & Produtos</button>
             <button id="btn-aba-fidelidade" onclick="mudarAba('fidelidade')" style="background: #222; color: #fff; border: none; padding: 10px 16px; font-weight: bold; border-radius: 6px; cursor: pointer;">Fidelidade</button>
             {% if papel == 'admin' %}
+            <button id="btn-aba-desempenho" onclick="mudarAba('desempenho')" style="background: #222; color: #fff; border: none; padding: 10px 16px; font-weight: bold; border-radius: 6px; cursor: pointer;">Desempenho & Comissões</button>
+            <button id="btn-aba-servicos" onclick="mudarAba('servicos')" style="background: #222; color: #fff; border: none; padding: 10px 16px; font-weight: bold; border-radius: 6px; cursor: pointer;">Gerir Serviços</button>
             <button id="btn-aba-acessos" onclick="mudarAba('acessos')" style="background: #222; color: #fff; border: none; padding: 10px 16px; font-weight: bold; border-radius: 6px; cursor: pointer;">Gestão de Acessos</button>
             {% endif %}
         </div>
 
         <!-- ABA 1: AGENDAMENTOS E GESTÃO -->
         <div id="aba-agendamentos">
-            
-            {% if papel == 'admin' and stats_barbeiros %}
-            <div class="section-box" style="background: #1a1a1a; border: 1px solid #f1c40f;">
-                <h2 style="color: #f1c40f; margin-top: 0;">Desempenho e Comissões (Barbearia: 30%)</h2>
-                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                    {% for sb in stats_barbeiros %}
-                    <div style="flex: 1; min-width: 280px; background: #141414; padding: 15px; border-radius: 6px; border: 1px solid #2a2a2a;">
-                        <strong style="color: #fff; font-size: 16px;">{{ sb.nome }}</strong>
-                        <p style="margin: 6px 0 2px 0; font-size: 13px; color: #aaa;">Atendimentos: <span style="color: #f1c40f; font-weight: bold;">{{ sb.qtd }}</span></p>
-                        <p style="margin: 0 0 2px 0; font-size: 13px; color: #aaa;">Faturamento Bruto: <span style="color: #2ecc71; font-weight: bold;">R$ {{ "%.2f"|format(sb.faturamento) }}</span></p>
-                        <p style="margin: 0 0 2px 0; font-size: 12px; color: #3498db;">Comissão Barbeiro (70%): R$ {{ "%.2f"|format(sb.barbeiro) }}</p>
-                        <p style="margin: 0 0 12px 0; font-size: 12px; color: #e67e22;">Retenção Barbearia (30%): R$ {{ "%.2f"|format(sb.casa) }}</p>
-
-                        {% if papel == 'admin' %}
-                        <div style="border-top: 1px solid #2a2a2a; padding-top: 10px; margin-top: 8px;">
-                            <span style="font-size: 11px; color: #f1c40f; font-weight: bold; display: block; margin-bottom: 6px;">⚙️ Ajustes do ADM (Alex):</span>
-                            
-                            <form action="/ajustar_atendimentos" method="POST" style="display: flex; gap: 5px; margin-bottom: 6px;">
-                                <input type="hidden" name="barbeiro" value="{{ sb.nome }}">
-                                <button type="submit" name="delta" value="1" title="Adicionar 1 Atendimento" style="flex: 1; background: #27ae60; color: #fff; border: none; padding: 4px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold;">+ Atendimento</button>
-                                <button type="submit" name="delta" value="-1" title="Remover 1 Atendimento" style="flex: 1; background: #c0392b; color: #fff; border: none; padding: 4px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold;">- Atendimento</button>
-                            </form>
-
-                            <form action="/ajustar_faturamento" method="POST" style="display: flex; gap: 5px; margin-bottom: 6px;">
-                                <input type="hidden" name="barbeiro" value="{{ sb.nome }}">
-                                <input type="number" step="0.01" name="delta" placeholder="+/- R$" required style="flex: 2; padding: 4px 6px; background: #101010; border: 1px solid #333; color: #fff; font-size: 11px; border-radius: 4px; box-sizing: border-box;">
-                                <button type="submit" style="flex: 1; background: #3498db; color: #fff; border: none; padding: 4px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold;">Faturamento</button>
-                            </form>
-
-                            <div>
-                                <a href="/zerar_desempenho_barbeiro/{{ sb.nome }}" onclick="return confirm('ATENÇÃO: Deseja realmente zerar todos os atendimentos e faturamento de {{ sb.nome }}?')" style="background: #e67e22; color: #fff; padding: 5px; border-radius: 4px; text-decoration: none; font-size: 11px; font-weight: bold; display: block; text-align: center;">Zerar Tudo ({{ sb.nome }})</a>
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-
             <!-- Bloqueio de Horários Específicos -->
             <div class="section-box">
                 <h2>Bloquear Horário Específico / Deixar Mensagem</h2>
                 <form action="/bloquear_horario" method="POST" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
                     <div style="flex: 1; min-width: 140px;">
                         <label style="font-size: 12px; color: #aaa;">Data:</label>
-                        <input type="date" name="data_bloqueio" value="{{ hoje }}" required style="width: 100%; padding: 8px; background: #101010; border: 1px solid #333; color: #fff; border-radius: 6px; box-sizing: border-box;">
+                        <input type="date" name="data_bloqueio" required style="width: 100%; padding: 8px; background: #101010; border: 1px solid #333; color: #fff; border-radius: 6px; box-sizing: border-box;">
                     </div>
                     <div style="flex: 1; min-width: 120px;">
                         <label style="font-size: 12px; color: #aaa;">Horário:</label>
@@ -198,13 +179,20 @@
                 <div>
                     <h3 style="margin: 0; color: #aaa; font-size: 14px;">Faturamento Bruto no Período</h3>
                     <p style="margin: 5px 0 0 0; font-size: 24px; color: #2ecc71; font-weight: bold;">R$ {{ "%.2f"|format(total_fat) }}</p>
-                    <p style="margin: 5px 0 0 0; font-size: 13px; color: #e67e22;">Comissão Barbearia (30%): R$ {{ "%.2f"|format(total_fat * 0.30) }} | Profissional (70%): R$ {{ "%.2f"|format(total_fat * 0.70) }}</p>
+                    <p style="margin: 5px 0 0 0; font-size: 13px; color: #e67e22;">Comissão Barbearia (40%): R$ {{ "%.2f"|format(total_fat * 0.40) }} | Profissional (60%): R$ {{ "%.2f"|format(total_fat * 0.60) }}</p>
                 </div>
-                <div style="display: flex; gap: 5px;">
-                    <a href="/painel?filtro=dia" style="background: {{ '#f1c40f' if filtro_fat == 'dia' else '#222' }}; color: {{ '#0b0b0b' if filtro_fat == 'dia' else '#fff' }}; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: bold;">Dia</a>
-                    <a href="/painel?filtro=mes" style="background: {{ '#f1c40f' if filtro_fat == 'mes' else '#222' }}; color: {{ '#0b0b0b' if filtro_fat == 'mes' else '#fff' }}; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: bold;">Mês</a>
-                    <a href="/painel?filtro=ano" style="background: {{ '#f1c40f' if filtro_fat == 'ano' else '#222' }}; color: {{ '#0b0b0b' if filtro_fat == 'ano' else '#fff' }}; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: bold;">Ano</a>
-                    <a href="/painel?filtro=todos" style="background: {{ '#f1c40f' if filtro_fat == 'todos' else '#222' }}; color: {{ '#0b0b0b' if filtro_fat == 'todos' else '#fff' }}; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: bold;">Tudo</a>
+                <div style="display: flex; gap: 5px; align-items: center; flex-wrap: wrap;">
+                    <div style="display: flex; gap: 5px;">
+                        <a href="/painel?filtro=dia" style="background: {{ '#f1c40f' if filtro_fat == 'dia' else '#222' }}; color: {{ '#0b0b0b' if filtro_fat == 'dia' else '#fff' }}; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: bold;">Dia</a>
+                        <a href="/painel?filtro=mes" style="background: {{ '#f1c40f' if filtro_fat == 'mes' else '#222' }}; color: {{ '#0b0b0b' if filtro_fat == 'mes' else '#fff' }}; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: bold;">Mês</a>
+                        <a href="/painel?filtro=ano" style="background: {{ '#f1c40f' if filtro_fat == 'ano' else '#222' }}; color: {{ '#0b0b0b' if filtro_fat == 'ano' else '#fff' }}; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: bold;">Ano</a>
+                        <a href="/painel?filtro=todos" style="background: {{ '#f1c40f' if filtro_fat == 'todos' else '#222' }}; color: {{ '#0b0b0b' if filtro_fat == 'todos' else '#fff' }}; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: bold;">Tudo</a>
+                    </div>
+                    {% if papel == 'admin' %}
+                    <div>
+                        <a href="/zerar_tudo_faturamento" onclick="return confirm('ATENÇÃO: Deseja realmente zerar todos os agendamentos e faturamento geral do sistema?')" style="background: #c0392b; color: #fff; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: bold; display: inline-block;">🗑️ Zerar Tudo</a>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 
@@ -239,11 +227,11 @@
             </div>
         </div>
 
-        <!-- ABA 3: ESTOQUE E PRODUTOS (Com opção de cadastro sem foto e baixa pelos barbeiros) -->
+        <!-- ABA 3: ESTOQUE E PRODUTOS -->
         <div id="aba-estoque" style="display: none;">
             {% if papel == 'admin' %}
             <div class="section-box">
-                <h2>Cadastrar Novo Produto (Sem foto)</h2>
+                <h2>Cadastrar Novo Produto</h2>
                 <form action="/adicionar_produto" method="POST" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
                     <div style="flex: 2; min-width: 180px;">
                         <label style="font-size: 12px; color: #aaa;">Nome do Produto:</label>
@@ -325,7 +313,7 @@
                             <th style="padding: 10px;">Nome do Cliente</th>
                             <th style="padding: 10px;">Cortes Realizados</th>
                             <th style="padding: 10px;">Status / Recompensa</th>
-                            <th style="padding: 10px; text-align: center;">Ação</th>
+                            <th style="padding: 10px; text-align: center;">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -340,8 +328,9 @@
                                     Faltam {{ 10 - fc[2] }} cortes
                                 {% endif %}
                             </td>
-                            <td style="padding: 10px; text-align: center;">
-                                <a href="/zerar_fidelidade/{{ fc[0] }}" onclick="return confirm('Deseja zerar os cortes de fidelidade deste cliente?')" style="background: #e67e22; color: #fff; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: bold;">Zerar Cortes</a>
+                            <td style="padding: 10px; text-align: center; display: flex; gap: 5px; justify-content: center;">
+                                <a href="/zerar_fidelidade/{{ fc[0] }}" onclick="return confirm('Deseja zerar os cortes de fidelidade deste cliente?')" style="background: #e67e22; color: #fff; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: bold;">Zerar</a>
+                                <a href="/remover_fidelidade/{{ fc[0] }}" onclick="return confirm('Deseja realmente eliminar este cliente do sistema de fidelidade?')" style="background: #c0392b; color: #fff; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: bold;">Excluir</a>
                             </td>
                         </tr>
                         {% endfor %}
@@ -353,22 +342,104 @@
             </div>
         </div>
 
-        <!-- ABA 5: GESTÃO DE ACESSOS (Exclusivo para o ADM / Alex) -->
+        <!-- ABA 5: DESEMPENHO E COMISSÕES (Exclusivo Administrador - Alex) -->
+        {% if papel == 'admin' %}
+        <div id="aba-desempenho" style="display: none;">
+            <div class="section-box" style="background: #1a1a1a; border: 1px solid #f1c40f;">
+                <h2 style="color: #f1c40f; margin-top: 0;">Desempenho e Comissões (Barbearia: 40% | Barbeiro: 60%)</h2>
+                {% if stats_barbeiros %}
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    {% for sb in stats_barbeiros %}
+                    <div style="flex: 1; min-width: 280px; background: #141414; padding: 15px; border-radius: 6px; border: 1px solid #2a2a2a;">
+                        <strong style="color: #fff; font-size: 16px;">{{ sb.nome }}</strong>
+                        <p style="margin: 6px 0 2px 0; font-size: 13px; color: #aaa;">Atendimentos: <span style="color: #f1c40f; font-weight: bold;">{{ sb.qtd }}</span></p>
+                        <p style="margin: 0 0 2px 0; font-size: 13px; color: #aaa;">Faturamento Bruto: <span style="color: #2ecc71; font-weight: bold;">R$ {{ "%.2f"|format(sb.faturamento) }}</span></p>
+                        <p style="margin: 0 0 2px 0; font-size: 12px; color: #3498db;">Comissão Barbeiro (60%): R$ {{ "%.2f"|format(sb.barbeiro) }}</p>
+                        <p style="margin: 0 0 12px 0; font-size: 12px; color: #e67e22;">Retenção Barbearia (40%): R$ {{ "%.2f"|format(sb.casa) }}</p>
+
+                        <div style="border-top: 1px solid #2a2a2a; padding-top: 10px; margin-top: 8px;">
+                            <span style="font-size: 11px; color: #f1c40f; font-weight: bold; display: block; margin-bottom: 6px;">⚙️ Ajustes do ADM (Alex):</span>
+                            
+                            <form action="/ajustar_atendimentos" method="POST" style="display: flex; gap: 5px; margin-bottom: 6px;">
+                                <input type="hidden" name="barbeiro" value="{{ sb.nome }}">
+                                <button type="submit" name="delta" value="1" title="Adicionar 1 Atendimento" style="flex: 1; background: #27ae60; color: #fff; border: none; padding: 4px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold;">+ Atendimento</button>
+                                <button type="submit" name="delta" value="-1" title="Remover 1 Atendimento" style="flex: 1; background: #c0392b; color: #fff; border: none; padding: 4px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold;">- Atendimento</button>
+                            </form>
+
+                            <form action="/ajustar_faturamento" method="POST" style="display: flex; gap: 5px; margin-bottom: 6px;">
+                                <input type="hidden" name="barbeiro" value="{{ sb.nome }}">
+                                <input type="number" step="0.01" name="delta" placeholder="+/- R$" required style="flex: 2; padding: 4px 6px; background: #101010; border: 1px solid #333; color: #fff; font-size: 11px; border-radius: 4px; box-sizing: border-box;">
+                                <button type="submit" style="flex: 1; background: #3498db; color: #fff; border: none; padding: 4px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold;">Faturamento</button>
+                            </form>
+
+                            <div>
+                                <a href="/zerar_desempenho_barbeiro/{{ sb.nome }}" onclick="return confirm('ATENÇÃO: Deseja realmente zerar todos os atendimentos e faturamento de {{ sb.nome }}?')" style="background: #e67e22; color: #fff; padding: 5px; border-radius: 4px; text-decoration: none; font-size: 11px; font-weight: bold; display: block; text-align: center;">Zerar Tudo ({{ sb.nome }})</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p style="color: #888; text-align: center; padding: 20px;">Nenhum dado de desempenho registado.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ABA 6: GESTÃO DE SERVIÇOS E PREÇOS (Exclusivo Administrador - Alex) -->
+        {% if papel == 'admin' %}
+        <div id="aba-servicos" style="display: none;">
+            <div class="section-box">
+                <h2>Gerir Nomes e Preços dos Serviços</h2>
+                <p style="font-size: 13px; color: #aaa; margin-bottom: 15px;">Altere os nomes ou valores cobrados pelos serviços. As alterações refletem de imediato no site para os clientes.</p>
+                
+                {% if servicos_lista %}
+                <div style="display: grid; gap: 12px;">
+                    {% for s in servicos_lista %}
+                    <div style="background: #141414; padding: 15px; border-radius: 6px; border: 1px solid #2a2a2a;">
+                        <form action="/atualizar_servico/{{ s[0] }}" method="POST" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;">
+                            <div style="flex: 2; min-width: 200px;">
+                                <label style="font-size: 11px; color: #aaa;">Nome do Serviço:</label>
+                                <input type="text" name="nome" value="{{ s[1] }}" required style="width: 100%; padding: 7px; background: #101010; border: 1px solid #333; color: #fff; border-radius: 4px; box-sizing: border-box;">
+                            </div>
+                            <div style="flex: 1; min-width: 120px;">
+                                <label style="font-size: 11px; color: #aaa;">Preço (R$):</label>
+                                <input type="number" step="0.01" name="preco" value="{{ s[2] }}" required style="width: 100%; padding: 7px; background: #101010; border: 1px solid #333; color: #fff; border-radius: 4px; box-sizing: border-box;">
+                            </div>
+                            <div>
+                                <button type="submit" style="background: #f1c40f; color: #0b0b0b; border: none; padding: 8px 14px; border-radius: 4px; cursor: pointer; font-weight: bold;">Salvar Alteração</button>
+                            </div>
+                        </form>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p style="color: #888; text-align: center; padding: 20px;">Nenhum serviço registado.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ABA 7: GESTÃO DE ACESSOS (Exclusivo Administrador - Alex) -->
         {% if papel == 'admin' %}
         <div id="aba-acessos" style="display: none;">
             <div class="section-box">
                 <h2>Criar Novo Acesso (Barbeiro / Utilizador)</h2>
                 <form action="/criar_usuario" method="POST" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-                    <div style="flex: 2; min-width: 160px;">
-                        <label style="font-size: 12px; color: #aaa;">Nome do Barbeiro:</label>
+                    <div style="flex: 2; min-width: 150px;">
+                        <label style="font-size: 12px; color: #aaa;">Nome:</label>
                         <input type="text" name="nome" placeholder="Ex: Carlos" required style="width: 100%; padding: 8px; background: #101010; border: 1px solid #333; color: #fff; border-radius: 6px; box-sizing: border-box;">
                     </div>
-                    <div style="flex: 2; min-width: 160px;">
-                        <label style="font-size: 12px; color: #aaa;">Senha de Acesso:</label>
+                    <div style="flex: 2; min-width: 130px;">
+                        <label style="font-size: 12px; color: #aaa;">Senha:</label>
                         <input type="text" name="senha" placeholder="Ex: 1234" required style="width: 100%; padding: 8px; background: #101010; border: 1px solid #333; color: #fff; border-radius: 6px; box-sizing: border-box;">
                     </div>
-                    <div style="flex: 1; min-width: 130px;">
-                        <label style="font-size: 12px; color: #aaa;">Nível / Papel:</label>
+                    <div style="flex: 2; min-width: 150px;">
+                        <label style="font-size: 12px; color: #aaa;">WhatsApp (DDD+Número):</label>
+                        <input type="text" name="whatsapp" placeholder="Ex: 35999887766" required style="width: 100%; padding: 8px; background: #101010; border: 1px solid #333; color: #fff; border-radius: 6px; box-sizing: border-box;">
+                    </div>
+                    <div style="flex: 1; min-width: 120px;">
+                        <label style="font-size: 12px; color: #aaa;">Papel:</label>
                         <select name="papel" required style="width: 100%; padding: 8px; background: #101010; border: 1px solid #333; color: #fff; border-radius: 6px; box-sizing: border-box;">
                             <option value="barbeiro">Barbeiro</option>
                             <option value="admin">Administrador</option>
@@ -387,20 +458,27 @@
                     {% for u in usuarios_lista %}
                     <div style="background: #141414; padding: 15px; border-radius: 6px; border: 1px solid #2a2a2a;">
                         <form action="/atualizar_usuario/{{ u[0] }}" method="POST" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;">
-                            <div style="flex: 2; min-width: 160px;">
-                                <label style="font-size: 11px; color: #aaa;">Nome do Perfil:</label>
+                            <div style="flex: 2; min-width: 140px;">
+                                <label style="font-size: 11px; color: #aaa;">Nome:</label>
                                 <input type="text" name="nome" value="{{ u[1] }}" required style="width: 100%; padding: 7px; background: #101010; border: 1px solid #333; color: #fff; border-radius: 4px; box-sizing: border-box;">
                             </div>
-                            <div style="flex: 2; min-width: 160px;">
+                            <div style="flex: 2; min-width: 120px;">
                                 <label style="font-size: 11px; color: #aaa;">Senha:</label>
                                 <input type="text" name="senha" value="{{ u[2] }}" required style="width: 100%; padding: 7px; background: #101010; border: 1px solid #333; color: #fff; border-radius: 4px; box-sizing: border-box;">
                             </div>
-                            <div style="flex: 1; min-width: 110px;">
-                                <label style="font-size: 11px; color: #aaa;">Função:</label>
-                                <input type="text" value="{{ 'Administrador' if u[3] == 'admin' else 'Barbeiro' }}" disabled style="width: 100%; padding: 7px; background: #222; border: 1px solid #333; color: #888; border-radius: 4px; box-sizing: border-box;">
+                            <div style="flex: 2; min-width: 150px;">
+                                <label style="font-size: 11px; color: #aaa;">WhatsApp:</label>
+                                <input type="text" name="whatsapp" value="{{ u[4] }}" required style="width: 100%; padding: 7px; background: #101010; border: 1px solid #333; color: #fff; border-radius: 4px; box-sizing: border-box;">
                             </div>
-                            <div>
-                                <button type="submit" style="background: #f1c40f; color: #0b0b0b; border: none; padding: 8px 14px; border-radius: 4px; cursor: pointer; font-weight: bold;">Atualizar</button>
+                            <div style="flex: 1; min-width: 90px;">
+                                <label style="font-size: 11px; color: #aaa;">Função:</label>
+                                <input type="text" value="{{ 'Admin' if u[3] == 'admin' else 'Barbeiro' }}" disabled style="width: 100%; padding: 7px; background: #222; border: 1px solid #333; color: #888; border-radius: 4px; box-sizing: border-box;">
+                            </div>
+                            <div style="display: flex; gap: 5px;">
+                                <button type="submit" style="background: #f1c40f; color: #0b0b0b; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px;">Atualizar</button>
+                                {% if u[1] != 'Alex' %}
+                                <a href="/remover_usuario/{{ u[0] }}" onclick="return confirm('Deseja realmente eliminar o acesso de {{ u[1] }}?')" style="background: #c0392b; color: #fff; padding: 8px 12px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: bold; display: inline-block;">Eliminar</a>
+                                {% endif %}
                             </div>
                         </form>
                     </div>
